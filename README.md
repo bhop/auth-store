@@ -1,1 +1,1 @@
-# Authentication Store
+# Authentication Store [![Build Status](https://travis-ci.org/bhop/auth-store.svg?branch=master)](https://travis-ci.org/bhop/auth-store) [![codecov](https://codecov.io/gh/bhop/auth-store/branch/master/graph/badge.svg)](https://codecov.io/gh/bhop/auth-store)
