@@ -41,7 +41,7 @@ class UserEndpoints[F[_]: Effect](userRepository: UserRepository[F]) extends Htt
         for {
           _         <- info[F](s"Deleting a user - id: $id")
           deleted   <- userRepository.delete(id)
-          _ <- info[F](deleted.fold(deleteUserErrorLog(id))(deleteUserSuccessLog(id)))
+          _         <- info[F](deleted.fold(deleteUserErrorLog(id))(deleteUserSuccessLog(id)))
           response  <- deleted match {
             case Some(_) => Ok(s"User with id: $id deleted")
             case None    => NotFound(s"User with id: $id not found")
