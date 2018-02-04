@@ -3,7 +3,6 @@ package com.github.bhop.authstore.http
 import cats.effect.Effect
 import cats.implicits._
 import com.github.bhop.authstore.auth.TokenBasedAuthenticator.UserToken
-import com.github.bhop.authstore.model.User
 import com.github.bhop.authstore.{Log, model}
 import com.github.bhop.authstore.service.AuthService
 import io.circe.generic.auto._
@@ -12,8 +11,7 @@ import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{EntityDecoder, HttpService}
 
-class AuthEndpoints[F[_]: Effect](authService: AuthService[F]) extends Http4sDsl[F]
-  with Log with AuthEndpointsLogMessages {
+class AuthEndpoints[F[_]: Effect](authService: AuthService[F]) extends Http4sDsl[F] with Log {
 
   import model._
 
@@ -52,20 +50,17 @@ class AuthEndpoints[F[_]: Effect](authService: AuthService[F]) extends Http4sDsl
 
   def endpoints: HttpService[F] =
     signIn <+> signUp
-}
 
-trait AuthEndpointsLogMessages {
-
-  def signInErrorLog(error: String): String =
+  private def signInErrorLog(error: String): String =
     s"Could not sign in a user due to: " + error
 
-  def signInSuccessLog(email: String)(token: UserToken): String =
+  private def signInSuccessLog(email: String)(token: UserToken): String =
     s"User signed in - " + email
 
-  def signUpErrorLog(error: String): String =
+  private def signUpErrorLog(error: String): String =
     "Could not sign up a user due to: " + error
 
-  def signUpSuccessLog(user: User): String =
+  private def signUpSuccessLog(user: User): String =
     "User signed up - " + user.email
 }
 
