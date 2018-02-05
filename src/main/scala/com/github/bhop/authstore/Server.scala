@@ -21,11 +21,12 @@ object Server extends StreamApp[IO] {
   def createStream[F[_]: Effect](args: List[String], shutdown: F[Unit]): Stream[F, ExitCode] =
     for {
       userRepository  <- Stream.eval(InMemoryUserRepository[F]().pure[F])
-      authenticator   =  JwtTokenAuthenticator[F]("secret") // todo: read secret key from a config file
+      configuration   <- Stream.eval(SafeConfig[F]().read)
+      authenticator   =  JwtTokenAuthenticator[F](configuration.auth)
       authMiddleware  <- Stream.eval(JwtTokenAuthMiddleware[F](authenticator))
       authService     =  AuthService[F](userRepository, authenticator)
       exitCode        <- BlazeBuilder[F]
-        .bindHttp(port = 8080, host = "0.0.0.0")
+        .bindHttp(port = configuration.http.port.value, host = "0.0.0.0")
         .mountService(service = AuthEndpoints.endpoints[F](authService), prefix = "/auth")
         .mountService(service = authMiddleware(UserEndpoints.endpoints[F](userRepository)), prefix = "/")
         .serve

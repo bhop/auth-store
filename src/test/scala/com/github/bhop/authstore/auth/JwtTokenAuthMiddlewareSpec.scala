@@ -2,6 +2,7 @@ package com.github.bhop.authstore.auth
 
 import cats.effect.IO
 import cats.syntax.applicative._
+import com.github.bhop.authstore.SafeConfig.{AuthConfig, JwtTokenSecret}
 import com.github.bhop.authstore.model.User
 import org.http4s.Credentials.Token
 import org.http4s.{AuthScheme, AuthedService, Headers, Request, Status}
@@ -12,11 +13,13 @@ import org.scalatest.{Matchers, WordSpec}
 
 class JwtTokenAuthMiddlewareSpec extends WordSpec with Matchers with Http4sDsl[IO] {
 
+  val config = AuthConfig(secret = JwtTokenSecret("secret"))
+
   "A Jwt Token Auth Middleware" should {
 
     "return an error if Authorization header does not exist" in {
       val program: IO[(Status, String)] = for {
-        authenticator <- JwtTokenAuthenticator[IO]("secret").pure[IO]
+        authenticator <- JwtTokenAuthenticator[IO](config).pure[IO]
         middleware    <- JwtTokenAuthMiddleware[IO](authenticator)
         request       =  Request[IO](uri = uri("/welcome"))
         response      <- middleware(testService).run(request).getOrElse(fail(s"Request was not handled: $request"))
@@ -30,7 +33,7 @@ class JwtTokenAuthMiddlewareSpec extends WordSpec with Matchers with Http4sDsl[I
 
     "return an error if Authorization scheme is different than Bearer" in {
       val program: IO[(Status, String)] = for {
-        authenticator <- JwtTokenAuthenticator[IO]("secret").pure[IO]
+        authenticator <- JwtTokenAuthenticator[IO](config).pure[IO]
         middleware    <- JwtTokenAuthMiddleware[IO](authenticator)
         request       =  Request[IO](uri = uri("/welcome"), headers = authHeader(AuthScheme.Basic, "token"))
         response      <- middleware(testService).run(request).getOrElse(fail(s"Request was not handled: $request"))
@@ -44,7 +47,7 @@ class JwtTokenAuthMiddlewareSpec extends WordSpec with Matchers with Http4sDsl[I
 
     "authorize a request and read a subject from a token" in {
       val program: IO[(Status, String)] = for {
-        authenticator <- JwtTokenAuthenticator[IO]("secret").pure[IO]
+        authenticator <- JwtTokenAuthenticator[IO](config).pure[IO]
         user          =  User(name = "username", email = "test@test", password = "password")
         token         <- authenticator.generateToken(user)
         middleware    <- JwtTokenAuthMiddleware[IO](authenticator)
