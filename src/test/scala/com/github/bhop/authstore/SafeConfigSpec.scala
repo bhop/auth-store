@@ -22,12 +22,12 @@ class SafeConfigSpec extends WordSpec with Matchers {
     }
 
     "return errors for an invalid config" in {
-      intercept[ConfigException] {
+      val caught = intercept[ConfigException] {
         val config = ConfigFactory.parseString(
           """
             |{
             | http = {
-            |   port = "invalid type"
+            |   port = ""
             | }
             |
             | auth = {
@@ -38,6 +38,9 @@ class SafeConfigSpec extends WordSpec with Matchers {
 
         SafeConfig[IO](config).read.unsafeRunSync()
       }
+
+      caught.getMessage.contains("Key not found: 'secret'.")
+      caught.getMessage.contains("Empty string found when trying to convert to Int.")
     }
   }
 }
