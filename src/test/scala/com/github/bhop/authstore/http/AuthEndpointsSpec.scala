@@ -2,6 +2,7 @@ package com.github.bhop.authstore.http
 
 import cats.effect.IO
 import cats.syntax.applicative._
+import com.github.bhop.authstore.SafeConfig.{AuthConfig, JwtTokenSecret}
 import com.github.bhop.authstore.auth.JwtTokenAuthenticator
 import com.github.bhop.authstore.model.{Credentials, User}
 import com.github.bhop.authstore.repository.InMemoryUserRepository
@@ -9,12 +10,13 @@ import com.github.bhop.authstore.service.AuthService
 import org.http4s.{Request, Status}
 import org.http4s.dsl.Http4sDsl
 import org.scalatest.{Matchers, WordSpec}
-
 import org.http4s.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 
 class AuthEndpointsSpec extends WordSpec with Matchers with Http4sDsl[IO] {
+
+  val config = AuthConfig(secret = JwtTokenSecret("secret"))
 
   "Auth Endpoints" should {
 
@@ -22,7 +24,7 @@ class AuthEndpointsSpec extends WordSpec with Matchers with Http4sDsl[IO] {
       val program: IO[Status] = for {
         repository    <- InMemoryUserRepository[IO]().pure[IO]
         _             <- repository.put(User(name = "name", email = "test@test", password = "password"))
-        authenticator =  JwtTokenAuthenticator[IO]("secret")
+        authenticator =  JwtTokenAuthenticator[IO](config)
         authService   =  AuthService[IO](repository, authenticator)
         credentials   =  Credentials(email = "test@test", password = "password").asJson
         request       <- Request[IO](method = POST, uri = uri("/signin")).withBody(credentials)
@@ -36,7 +38,7 @@ class AuthEndpointsSpec extends WordSpec with Matchers with Http4sDsl[IO] {
     "sign in a user - return 403 Forbidden when provided credentials are wrong" in {
       val program: IO[Status] = for {
         repository    <- InMemoryUserRepository[IO]().pure[IO]
-        authenticator =  JwtTokenAuthenticator[IO]("secret")
+        authenticator =  JwtTokenAuthenticator[IO](config)
         authService   =  AuthService[IO](repository, authenticator)
         credentials   =  Credentials(email = "test@test", password = "password").asJson
         request       <- Request[IO](method = POST, uri = uri("/signin")).withBody(credentials)
@@ -51,7 +53,7 @@ class AuthEndpointsSpec extends WordSpec with Matchers with Http4sDsl[IO] {
       val program: IO[(Status, String, Boolean)] = for {
         repository    <- InMemoryUserRepository[IO]().pure[IO]
         user          =  User(name = "test", email = "test@test", password = "password")
-        authenticator =  JwtTokenAuthenticator[IO]("secret")
+        authenticator =  JwtTokenAuthenticator[IO](config)
         authService   =  AuthService[IO](repository, authenticator)
         request       <- Request[IO](method = POST, uri = uri("/signup")).withBody(user.asJson)
         response      <- AuthEndpoints.endpoints[IO](authService).run(request)
@@ -71,7 +73,7 @@ class AuthEndpointsSpec extends WordSpec with Matchers with Http4sDsl[IO] {
         repository    <- InMemoryUserRepository[IO]().pure[IO]
         user          =  User(name = "test", email = "test@test", password = "password")
         _             <- repository.put(user)
-        authenticator =  JwtTokenAuthenticator[IO]("secret")
+        authenticator =  JwtTokenAuthenticator[IO](config)
         authService   =  AuthService[IO](repository, authenticator)
         request       <- Request[IO](method = POST, uri = uri("/signup")).withBody(user.asJson)
         response      <- AuthEndpoints.endpoints[IO](authService).run(request)

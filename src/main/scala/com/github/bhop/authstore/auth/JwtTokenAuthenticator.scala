@@ -11,10 +11,11 @@ import cats.syntax.option._
 import cats.syntax.functor._
 import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
+import com.github.bhop.authstore.SafeConfig.AuthConfig
 
 import scala.concurrent.duration.FiniteDuration
 
-class JwtTokenAuthenticator[F[_]](secretKey: String)(implicit F: Sync[F]) extends TokenBasedAuthenticator[F] {
+class JwtTokenAuthenticator[F[_]](config: AuthConfig)(implicit F: Sync[F]) extends TokenBasedAuthenticator[F] {
 
   import TokenBasedAuthenticator._
 
@@ -40,11 +41,11 @@ class JwtTokenAuthenticator[F[_]](secretKey: String)(implicit F: Sync[F]) extend
     } yield UserClaims(email = subject)
 
   private def signingKey: F[MacSigningKey[HMACSHA256]] =
-    F.catchNonFatal(HMACSHA256.buildKeyUnsafe(secretKey.getBytes))
+    F.catchNonFatal(HMACSHA256.buildKeyUnsafe(config.secret.value.getBytes))
 }
 
 object JwtTokenAuthenticator {
 
-  def apply[F[_]: Sync](secretKey: String): JwtTokenAuthenticator[F] =
-    new JwtTokenAuthenticator[F](secretKey)
+  def apply[F[_]: Sync](config: AuthConfig): JwtTokenAuthenticator[F] =
+    new JwtTokenAuthenticator[F](config)
 }
