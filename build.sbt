@@ -32,7 +32,7 @@ libraryDependencies ++= Seq(
 
   "ch.qos.logback"        %  "logback-classic"      % LogbackVersion,
 
-  "org.scalatest"         %% "scalatest"            % ScalaTestVersion  % Test
+  "org.scalatest"         %% "scalatest"            % ScalaTestVersion  % "test,it"
 )
 
 scalacOptions ++= Seq(
@@ -50,5 +50,9 @@ scalacOptions ++= Seq(
   "-Xfatal-warnings",
   "-Xlint"
 )
+
+Defaults.itSettings
+
+configs(IntegrationTest)
 
 enablePlugins(ScalafmtPlugin, JavaAppPackaging)

@@ -20,7 +20,7 @@ before_cache:
   - find $HOME/.sbt -name "*.lock" -delete
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test it:test
 
 after_success:
   - sbt ++$TRAVIS_SCALA_VERSION coverageAggregate coverageReport
