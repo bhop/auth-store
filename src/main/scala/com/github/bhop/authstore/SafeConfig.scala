@@ -16,7 +16,9 @@ object SafeConfig {
   case class HttpPort(value: Int) extends AnyVal
   case class HttpConfig(port: HttpPort)
 
-  case class AppConfig(auth: AuthConfig, http: HttpConfig)
+  case class DatabaseConfig(uri: String, user: String, pass: String)
+
+  case class AppConfig(auth: AuthConfig, http: HttpConfig, database: DatabaseConfig)
 
   case class ConfigException(failures: ConfigReaderFailures) extends RuntimeException {
     override def getMessage: String =
